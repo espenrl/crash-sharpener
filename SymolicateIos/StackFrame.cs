@@ -1,14 +1,14 @@
 ﻿using System.Diagnostics;
 using System.Text.RegularExpressions;
 
-[DebuggerDisplay("{Module} {Offset} {Symbol}")]
+[DebuggerDisplay("{Module} {FunctionAddress} {Symbol}")]
 public partial struct StackFrame
 {
     public string Module { get; private init; }
     public string Symbol { get; private init; }
-    public long Offset { get; private init; }
+    public long FunctionAddress { get; private init; }
 
-    public static StackFrame? FromString(string line)
+    public static StackFrame? TryParse(string line)
     {
         // Parses lines from a stack trace that has been decorated with IL offsets and
         // method tokens.
@@ -25,14 +25,14 @@ public partial struct StackFrame
         if (match is { Success: true, Groups.Count: 6 })
         {
             var module = match.Groups[2].Value;
-            var offset = Convert.ToInt64(match.Groups[3].Value, 16);
+            var executionAddress = Convert.ToInt64(match.Groups[3].Value, 16);
             var symbol = match.Groups[4].Value;
-            var offset2 = Convert.ToInt64(match.Groups[5].Value, 10);
+            var functionOffset = Convert.ToInt64(match.Groups[5].Value, 10);
 
             return new StackFrame
             {
                 Module = module,
-                Offset = offset - offset2,
+                FunctionAddress = executionAddress - functionOffset,
                 Symbol = symbol
             };
         }
